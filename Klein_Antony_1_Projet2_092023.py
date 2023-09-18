@@ -1,62 +1,16 @@
 # Import des packets nécessaires
 import csv
+import os
 import requests
 from bs4 import BeautifulSoup
 
-# PHASE 1
-# Scraping des données demandées pour l'ouvrage selectionné
-
-# Fonction pour extraire les données d'un seul livre
 
 
-def data_one_book(url_book):
-    response = requests.get(url_book)
-    if response.ok:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        title = soup.find('div', {'class': 'col-sm-6 product_main'}).find('h1')
-        td = soup.find_all('td')
-        upc = td[0].get_text()
-        price_excluding_taxes = td[2].get_text()
-        price_including_taxes = td[3].get_text()
-        stock = td[5].get_text()
-        description = soup.find('div', {'id': 'product_description'})
-        if description is not None:
-            description = description.find_next_sibling().text
-        else:
-            description = 'No description'
-        category = soup.find('li', {'class': 'active'}).find_previous('li')
-        rating = soup.find('i', {'class': 'icon-star'}).find_parent('p').get('class')
-        find_img_url = soup.find('div', {'class': 'item active'}).find('img').attrs['src']
-        img_url = 'https://books.toscrape.com/'+find_img_url.replace("../../", "")
-        data = {
-            'url page': url_book,
-            'upc': upc,
-            'title': title.text,
-            'price with taxes': price_including_taxes,
-            'price without taxes': price_excluding_taxes,
-            'stock': stock,
-            'description': description,
-            'category': category.text.strip(),
-            'rating reviews': (rating[1].lower() + ' out of five'),
-            'image url': img_url
-        }
-        return data
 
 
-# Fonction print permettant l'extraction des données scrapés vers un fichier CSV
-def print_csvs(data_list, file_name):
-    headers = ['url page', 'upc', 'title', 'price with taxes', 'price without taxes', 'stock', 'description',
-               'category', 'rating reviews', 'image url']
-    with open(file_name, 'w', newline='', encoding='utf8') as file:
-        writer = csv.DictWriter(file, fieldnames=headers)
-        writer.writeheader()
-        writer.writerows(data_list)
 
 
-# Fin de la phase 1 : extraction des données du livre Dune vers fichier CSV
-url_dune = 'https://books.toscrape.com/catalogue/dune-dune-1_151/'
-book = data_one_book(url_dune)
-print_csvs([book], 'dune_book.csv')
+
 
 
 # PHASE 2
@@ -82,16 +36,15 @@ def get_all_links_book(url_cat):
 
 
 def get_all_pages(url_category):
-    list_all_pages = []
-    list_all_pages.append(url_category)
+    list_all_pages = [url_category]
     base_url = url_category[:-10]
     while True:
         response = requests.get(url_category)
         if response.ok:
             soup = BeautifulSoup(response.text, 'html.parser')
-            next = soup.find('li', {'class': 'next'})
-            if next is not None:
-                next_page = next.find('a')['href']
+            have_pagination = soup.find('li', {'class': 'next'})
+            if have_pagination is not None:
+                next_page = have_pagination.find('a')['href']
                 next_page = base_url + next_page
                 list_all_pages.append(next_page)
                 url_category = next_page
@@ -110,7 +63,7 @@ for datas_books in cat:
 print_csvs(data_sf_print, 'sf_books.csv')
 
 # Fin de la phase 2 : extraction des données d'une catégorie (defaut) avec plus d'une page vers fichier CSV
-
+'''
 url_cat_defaut = 'https://books.toscrape.com/catalogue/category/books/default_15/index.html'
 links_cat_defaut = get_all_pages(url_cat_defaut)
 data_cat_defaut = []
@@ -120,14 +73,13 @@ for links_cat in links_cat_defaut:
         all_book_data = data_one_book(defaut_book_data)
         data_cat_defaut.append(all_book_data)
 print_csvs(data_cat_defaut, 'categorie defaut.csv')
-
+'''
 
 # PHASE 3
 # Fonction permettant l'extraction de tous les liens des catégories du site
 
 
 def get_all_cat(url):
-    url = 'https://books.toscrape.com/'
     all_cat_links = []
     response = requests.get(url)
     if response.ok:
@@ -137,17 +89,35 @@ def get_all_cat(url):
             a = lis.find('a')
             cat_links = a['href']
             link = url + cat_links
-            all_cat_links.append(link)
-
+            cat_name = a.text.strip().lower()
+            all_cat_links.append(
+                {
+                    'category_url': link,
+                    'category_name': cat_name
+                }
+            )
         return all_cat_links
 
 
-main_url = 'https://books.toscrape.com/index.html'
+main_url = 'https://books.toscrape.com/'
 all_cat = get_all_cat(main_url)
+datas = os.path.join(os.path.dirname(__file__), 'datas')
+all_book_datas = []
+if not os.path.exists(datas):
+    os.mkdir(datas)
 for cats in all_cat:
-    links_cat = get_all_pages(cats)
+    links_cat = get_all_pages(cats['category_url'])
     for all_links_books in links_cat:
         all_books = get_all_links_book(all_links_books)
         for books in all_books:
             data_books = data_one_book(books)
-            print(data_books)
+            all_book_datas.append(data_books)
+
+    headers = ['url page', 'upc', 'title', 'price with taxes', 'price without taxes', 'stock', 'description',
+               'category', 'rating reviews', 'image url']
+    with open(os.path.join(datas, f"{cats['category_name']}.csv"), 'w', newline='', encoding='utf8') as file:
+        writer = csv.DictWriter(file, fieldnames=headers)
+        writer.writeheader()
+        for one_book in all_book_datas:
+            writer.writerow(one_book)
+    all_book_datas = []  # retourner liste vide à la fin de la boucle sinon les anciennes catégories s'y ajoutent
