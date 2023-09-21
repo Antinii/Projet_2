@@ -24,14 +24,17 @@ def get_all_pages(url_category):
                 return list_all_pages
 
 
-url_cat_defaut = 'https://books.toscrape.com/catalogue/category/books/default_15/index.html'
-links_cat_defaut = get_all_pages(url_cat_defaut)
-data_cat_defaut = []
-for links_cat in links_cat_defaut:
-    all_defaut_links = get_all_links_book(links_cat)
-    for defaut_book_data in all_defaut_links:
-        all_book_data = data_one_book(defaut_book_data)
-        data_cat_defaut.append(all_book_data)
-print_csvs(data_cat_defaut, 'categorie defaut.csv')
+# Extraction des données d'une catégorie (defaut) avec plus d'une page vers fichier CSV
 
-# Fin de la phase 2 : extraction des données d'une catégorie (defaut) avec plus d'une page vers fichier CSV
+
+url_cat_default = 'https://books.toscrape.com/catalogue/category/books/default_15/index.html'
+links_cat_default = get_all_pages(url_cat_default)
+data_cat_default = []
+for links_cat in links_cat_default:
+    all_default_links = get_all_links_book(links_cat)
+    for default_book_data in all_default_links:
+        all_book_data = data_one_book(default_book_data)
+        data_cat_default.append(all_book_data)
+print_csvs(data_cat_default, 'category_default.csv')
+
+# Fin de la phase 2

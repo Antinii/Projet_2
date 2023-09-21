@@ -24,5 +24,3 @@ def get_all_cat(url):
                 }
             )
         return all_cat_links
-
-

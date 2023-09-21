@@ -31,4 +31,4 @@ data_sf_print = []
 for datas_books in cat:
     datas_list_books = data_one_book(datas_books)
     data_sf_print.append(datas_list_books)
-print_csvs(data_sf_print, 'sf_books.csv')
+print_csvs(data_sf_print, 'category_sf.csv')

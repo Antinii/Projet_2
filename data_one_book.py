@@ -1,7 +1,6 @@
 # Import des packets nécessaires
 import requests
 import csv
-import os
 from bs4 import BeautifulSoup
 
 # PHASE 1
@@ -12,8 +11,6 @@ from bs4 import BeautifulSoup
 
 def data_one_book(url_book):
     response = requests.get(url_book)
-    data_folder = os.path.dirname(__file__)
-    data_folder = os.path.join(data_folder, 'datas\\images')
     if response.ok:
         soup = BeautifulSoup(response.content, 'html.parser')
         title = soup.find('div', {'class': 'col-sm-6 product_main'}).find('h1')
@@ -23,7 +20,7 @@ def data_one_book(url_book):
         price_including_taxes = td[3].get_text()
         stock = td[5].get_text()
         description = soup.find('div', {'id': 'product_description'})
-        if description is None:
+        if description is None:  # car certaines descriptions sont vides
             description = 'No description'
         else:
             description = description.find_next_sibling().text
@@ -31,12 +28,6 @@ def data_one_book(url_book):
         rating = soup.find('i', {'class': 'icon-star'}).find_parent('p').get('class')
         find_img_url = soup.find('div', {'class': 'item active'}).find('img').attrs['src']
         img_url = 'https://books.toscrape.com/'+find_img_url.replace("../../", "")
-        if not os.path.exists('datas/images'):
-            os.mkdir('datas/images')
-        img_path = os.path.join(data_folder, f'{category.text.strip()}, {upc}.jpg')
-        r = requests.get(img_url)
-        with open(img_path, 'wb') as f:
-            f.write(r.content)
         data = {
             'url page': url_book,
             'upc': upc,
