@@ -14,7 +14,7 @@ def get_all_links_book(url_cat):
     links_cat_list = []
     if response.ok:
         soup = BeautifulSoup(response.text, 'html.parser')
-        all_links = soup.find_all('h3')
+        all_links = soup.find_all('h3')  # Chercher toutes les balises h3
         for h3 in all_links:
             a = h3.find('a')
             link = 'https://books.toscrape.com/catalogue/' + a['href'].replace('../../../', '')

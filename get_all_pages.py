@@ -9,17 +9,17 @@ from bs4 import BeautifulSoup
 
 def get_all_pages(url_category):
     list_all_pages = [url_category]
-    base_url = url_category[:-10]
+    base_url = url_category[:-10]  # Obtenir le lien sans les 10 derniers caractères
     while True:
         response = requests.get(url_category)
         if response.ok:
             soup = BeautifulSoup(response.text, 'html.parser')
-            have_pagination = soup.find('li', {'class': 'next'})
-            if have_pagination is not None:
-                next_page = have_pagination.find('a')['href']
-                next_page = base_url + next_page
-                list_all_pages.append(next_page)
-                url_category = next_page
+            have_pagination = soup.find('li', {'class': 'next'})  # Chercher bouton next sur la page
+            if have_pagination is not None:  # Si bouton next existe
+                next_page = have_pagination.find('a')['href']  # chercher le lien du bouton next
+                next_page = base_url + next_page  # concaténer le lien de base avec le lien du bouton next
+                list_all_pages.append(next_page)  # les ajouter à la liste de toutes les pages
+                url_category = next_page  # redémarrer la boucle à la page next
             else:
                 return list_all_pages
 
