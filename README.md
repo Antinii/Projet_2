@@ -45,7 +45,7 @@ python -m venv env
 ```
 Activez votre environnement virtuel:
 ```
-env\Scripts\activate.bat
+env\Scripts\activate
 ```
 Installez les packages nécessaires:
 ```
